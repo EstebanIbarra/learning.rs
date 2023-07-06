@@ -16,25 +16,14 @@ fn main() {
             println!("Bye!");
             break;
         }
-        if is_number(input) {
-            print_result(input, "number", false);
-            println!();
-            continue;
-        }
-        if is_bool(input) {
-            print_result(input, "bool", false);
-            println!();
-            continue;
-        }
-        if is_array(input) {
-            print_result(input, "array", false);
-            let value: Value = parse_value(input);
-            print_array(value.as_array().unwrap());
-            println!();
-            continue;
-        }
-        match_null_string_or_char(input, false);
+        is_data_type(input, false);
+        println!();
     }
+}
+
+fn parse_value(input: &str) -> Value {
+    serde_json::from_str(input)
+        .expect("This is not an array")
 }
 
 fn print_result(input: &str, data_type: &str, is_array_value: bool) {
@@ -45,24 +34,22 @@ fn print_result(input: &str, data_type: &str, is_array_value: bool) {
     println!("You prompted the {}: {}", data_type, input);
 }
 
+fn parse_array(input: &str) {
+    match parse_value(input).as_array() {
+        Some(array) => {
+            print_result(input, "array", false);
+            print_array(array);
+        },
+        None => print_result(input, "array", false),
+    }
+}
+
 fn print_array(array: &Vec<Value>) {
     for value in array {
-        let value_string: &str = value.as_str().unwrap().trim();
-        if is_number(value_string) {
-            print_result(value_string, "number", true);
-            continue;
+        match value.as_str() {
+            Some(string) => is_data_type(string, true),
+            None => is_data_type(value.to_string().trim(), true),
         }
-        if is_bool(value_string) {
-            print_result(value_string, "bool", true);
-            continue;
-        }
-        if is_array(value_string) {
-            print_result(value_string, "array", false);
-            let value: Value = parse_value(value_string);
-            print_array(value.as_array().unwrap());
-            continue;
-        }
-        match_null_string_or_char(value_string, true);
     }
 }
 
@@ -87,30 +74,26 @@ fn is_array(input: &str) -> bool {
     }
 }
 
-fn parse_value(input: &str) -> Value {
-    serde_json::from_str(input)
-        .expect("This is not an array")
-}
-
 fn match_null_string_or_char(input: &str, is_array_value: bool) {
     match input.len().cmp(&1) {
-        Ordering::Less => {
-            print_result("null", "null value", is_array_value);
-            if !is_array_value {
-                println!();
-            }
-        },
-        Ordering::Equal => {
-            print_result(input, "char", is_array_value);
-            if !is_array_value {
-                println!();
-            }
-        },
-        Ordering::Greater => {
-            print_result(input, "string", is_array_value);
-            if !is_array_value {
-                println!();
-            }
-        },
+        Ordering::Less => print_result("null", "null value", is_array_value),
+        Ordering::Equal => print_result(input, "char", is_array_value),
+        Ordering::Greater => print_result(input, "string", is_array_value),
     }
+}
+
+fn is_data_type(input: &str, is_array_value: bool) {
+        if is_number(input) {
+            print_result(input, "number", is_array_value);
+            return;
+        }
+        if is_bool(input) {
+            print_result(input, "bool", is_array_value);
+            return;
+        }
+        if is_array(input) {
+            parse_array(input);
+            return;
+        }
+        match_null_string_or_char(input, is_array_value);
 }
