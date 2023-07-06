@@ -56,6 +56,11 @@ fn print_array(array: &Vec<Value>) {
             print_array(value.as_array().unwrap());
             continue;
         }
+        match value_string.trim().len().cmp(&1) {
+            Ordering::Less => print_result("null value", "null"),
+            Ordering::Equal => print_result(value_string, "char"),
+            Ordering::Greater => print_result(value_string, "string"),
+        }
     }
 }
 
