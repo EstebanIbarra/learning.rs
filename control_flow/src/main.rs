@@ -5,7 +5,17 @@ use serde_json::Value;
 fn main() {
     println!("Data Type Detector");
     println!("Type \"exit\" to end the program\n");
-    loop {
+    /*
+     * In Rust as in many other languages we have for and while loops, but Rust
+     * also has a loop, which is equivalent to while true in any other language
+     * Using while true will raise a warn in the compiler, but the program will
+     * work nonetheless.
+     *
+     * Rust also allows to return a value from a loop. For that case we will
+     * add the value after the break keyword and assign the loop to a variable.
+     */
+    // while true {
+    let exit_flag: bool = loop {
         println!("Please input something\n");
         let mut input = String::new();
         io::stdin().read_line(&mut input)
@@ -13,12 +23,23 @@ fn main() {
         let input = input.trim();
         println!();
         if input == "exit" {
-            println!("Bye!");
-            break;
+            break true;
         }
         is_data_type(input, false);
         println!();
-    }
+    };
+    /*
+     * In Rust we can assign to a variable a conditional that returns a value,
+     * similar to what we do in other languages by using a ternary operator.
+     * Although Rust doesn't have a ternary operator, you can use the regular
+     * if / if-else syntax
+     */
+    let exit_message: &str = if exit_flag {
+        "Bye!"
+    } else {
+        "Duh!"
+    };
+    println!("{}", exit_message);
 }
 
 fn parse_value(input: &str) -> Value {
