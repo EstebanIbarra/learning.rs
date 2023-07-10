@@ -21,9 +21,9 @@ fn main() {
             break;
         }
         let unit: char = input.chars().last().unwrap();
-        let input_split: Split<_> = input.split(unit);
-        let value: &str = match input_split.into_iter().next() {
-            Some(value) => value,
+        let mut input_split: Split<_> = input.split(unit);
+        let value: &str = match input_split.next() {
+            Some(value) => value.trim(),
             None => {
                 println!("Invalid value!\n");
                 continue;
@@ -83,6 +83,7 @@ fn retry() -> bool {
                 continue;
             }
         };
+        println!();
         return retry
     }
 }
