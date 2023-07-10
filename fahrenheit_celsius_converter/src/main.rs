@@ -1,10 +1,10 @@
 use std::io;
-use std::f64::INFINITY;
 use std::str::Split;
 
 fn main() {
     println!("Fahrenheit-Celsius Converter\n");
     loop {
+        println!("Type \"exit\" to quit the program\n");
         println!("Please input the temperature including the unit:");
         println!("    Example: \"123F\"");
         let mut input = String::new();
@@ -22,22 +22,20 @@ fn main() {
         }
         let unit: char = input.chars().last().unwrap();
         let input_split: Split<_> = input.split(unit);
-        let mut value: f64 = 0.0;
-        /*
-         * I know this is not the correct way to get the first element in a
-         * std::str::Split type, but I couldn't find any other way for now.
-         */
-        for element in input_split {
-            value = match element.trim().parse() {
-                Ok(value) => value,
-                Err(_) => INFINITY
-            };
-            break;
-        }
-        if value == INFINITY {
-            println!("Invalid value!\n");
-            continue;
-        }
+        let value: &str = match input_split.into_iter().next() {
+            Some(value) => value,
+            None => {
+                println!("Invalid value!\n");
+                continue;
+            },
+        };
+        let value: f64 = match value.parse() {
+            Ok(value) => value,
+            Err(_) => {
+                println!("{} is not a valid value!\n", value);
+                continue;
+            },
+        };
         match unit {
             'F' => fahrenheit_to_celsius(value),
             'f' => fahrenheit_to_celsius(value),
@@ -48,6 +46,10 @@ fn main() {
                 continue;
             },
         }
+        if retry() {
+            continue;
+        }
+        println!("Bye!");
         break;
     }
 }
@@ -62,4 +64,25 @@ fn celsius_to_fahrenheit(celsius: f64) {
     const C_TO_F: f64 = 9.0 / 5.0;
     let fahrenheit: f64 = celsius * C_TO_F + 32.0;
     println!("\t{} degrees Celsius equals to {:.2} degrees Fahrenheit.\n", celsius, fahrenheit);
+}
+
+fn retry() -> bool {
+    loop {
+        println!("Would you want to convert another temperature? (Y/N)\n");
+        let mut input: String = String::new();
+        io::stdin().read_line(&mut input)
+            .expect("Failed to read line");
+        let input: char = input.trim().chars().last().unwrap();
+        let retry = match input {
+            'Y' => true,
+            'y' => true,
+            'N' => false,
+            'n' => false,
+            _ => {
+                println!("Invalid option");
+                continue;
+            }
+        };
+        return retry
+    }
 }
