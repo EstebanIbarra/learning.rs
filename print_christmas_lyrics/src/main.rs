@@ -13,16 +13,14 @@ const LYRICS: [(&str, &str); 12] = [
     ("twelfth", "Twelve drummers drumming"),
 ];
 fn main() {
-    println!("Twelve Days of Christmas\n\n");
-    for i in 0..12 {
-        let lyrics: (&str, &str) = LYRICS[i];
-        let ordinal_number: &str = lyrics.0;
-        println!("On the {} day of Christmas, my true love sent to me", ordinal_number);
-        let mut counter = i + 1;
-        while counter > 0 {
-            let lyric: &str = LYRICS[counter - 1].1;
+    println!("Twelve Days of Christmas\n");
+    for lyrics in LYRICS {
+        println!("On the {} day of Christmas, my true love sent to me", lyrics.0);
+        let mut i: usize = LYRICS.iter().position(|&e| e == lyrics).unwrap() + 1;
+        while i > 0 {
+            let lyric: &str = LYRICS[i - 1].1;
             println!("{}", lyric);
-            counter -= 1;
+            i -= 1;
         }
         println!();
     }

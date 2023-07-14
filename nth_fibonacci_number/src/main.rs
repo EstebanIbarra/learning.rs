@@ -66,6 +66,7 @@ fn retry() -> bool {
                 continue;
             }
         };
+        println!();
         return retry
     }
 }

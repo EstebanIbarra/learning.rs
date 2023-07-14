@@ -1,10 +1,15 @@
 use std::io;
-use std::f64::INFINITY;
-use std::str::Split;
+
+enum Unit {
+    Fahrenheit,
+    Celsius,
+    Undefined,
+}
 
 fn main() {
     println!("Fahrenheit-Celsius Converter\n");
     loop {
+        println!("Type \"exit\" to quit the program\n");
         println!("Please input the temperature including the unit:");
         println!("    Example: \"123F\"");
         let mut input = String::new();
@@ -20,35 +25,46 @@ fn main() {
             println!("Bye!");
             break;
         }
-        let unit: char = input.chars().last().unwrap();
-        let input_split: Split<_> = input.split(unit);
-        let mut value: f64 = 0.0;
-        /*
-         * I know this is not the correct way to get the first element in a
-         * std::str::Split type, but I couldn't find any other way for now.
-         */
-        for element in input_split {
-            value = match element.trim().parse() {
-                Ok(value) => value,
-                Err(_) => INFINITY
-            };
-            break;
+        let (value, unit) = match parse_value_and_unit(input) {
+            Ok((value, unit)) => (value, unit),
+            Err(_) => continue,
+        };
+        match unit {
+            Unit::Fahrenheit => fahrenheit_to_celsius(value),
+            Unit::Celsius => celsius_to_fahrenheit(value),
+            _ => continue,
         }
-        if value == INFINITY {
-            println!("Invalid value!\n");
+        if retry() {
             continue;
         }
-        match unit {
-            'F' => fahrenheit_to_celsius(value),
-            'f' => fahrenheit_to_celsius(value),
-            'C' => celsius_to_fahrenheit(value),
-            'c' => celsius_to_fahrenheit(value),
-            _ => {
-                println!("{} is not a valid unit!\n", unit);
-                continue;
-            },
-        }
+        println!("Bye!");
         break;
+    }
+}
+
+fn parse_value_and_unit(input: &str) -> Result<(f64, Unit),()> {
+    let bytes = input.as_bytes();
+    let mut value: f64 = 0.0;
+    let mut unit: Unit = Unit::Undefined;
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b'F' || item == b'f' || item == b'C' || item == b'c' {
+            value = match input[..i].trim().parse() {
+                Ok(parsed_value) => parsed_value,
+                Err(_) => {
+                    println!("{} is not a valid value!\n", input[..i].trim());
+                    break;
+                },
+            };
+            if item == b'F' || item == b'f' {
+                unit = Unit::Fahrenheit;
+            } else {
+                unit = Unit::Celsius;
+            }
+        }
+    }
+    match unit {
+        Unit::Undefined => Err(()),
+        _ => Ok((value, unit)),
     }
 }
 
@@ -62,4 +78,26 @@ fn celsius_to_fahrenheit(celsius: f64) {
     const C_TO_F: f64 = 9.0 / 5.0;
     let fahrenheit: f64 = celsius * C_TO_F + 32.0;
     println!("\t{} degrees Celsius equals to {:.2} degrees Fahrenheit.\n", celsius, fahrenheit);
+}
+
+fn retry() -> bool {
+    loop {
+        println!("Would you want to convert another temperature? (Y/N)\n");
+        let mut input: String = String::new();
+        io::stdin().read_line(&mut input)
+            .expect("Failed to read line");
+        let input: char = input.trim().chars().last().unwrap();
+        let retry = match input {
+            'Y' => true,
+            'y' => true,
+            'N' => false,
+            'n' => false,
+            _ => {
+                println!("Invalid option");
+                continue;
+            }
+        };
+        println!();
+        return retry
+    }
 }
