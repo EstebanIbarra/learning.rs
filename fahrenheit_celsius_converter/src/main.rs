@@ -1,5 +1,10 @@
 use std::io;
-use std::str::Split;
+
+enum Unit {
+    Fahrenheit,
+    Celsius,
+    Undefined,
+}
 
 fn main() {
     println!("Fahrenheit-Celsius Converter\n");
@@ -20,37 +25,46 @@ fn main() {
             println!("Bye!");
             break;
         }
-        let unit: char = input.chars().last().unwrap();
-        let mut input_split: Split<_> = input.split(unit);
-        let value: &str = match input_split.next() {
-            Some(value) => value.trim(),
-            None => {
-                println!("Invalid value!\n");
-                continue;
-            },
-        };
-        let value: f64 = match value.parse() {
-            Ok(value) => value,
-            Err(_) => {
-                println!("{} is not a valid value!\n", value);
-                continue;
-            },
+        let (value, unit) = match parse_value_and_unit(input) {
+            Ok((value, unit)) => (value, unit),
+            Err(_) => continue,
         };
         match unit {
-            'F' => fahrenheit_to_celsius(value),
-            'f' => fahrenheit_to_celsius(value),
-            'C' => celsius_to_fahrenheit(value),
-            'c' => celsius_to_fahrenheit(value),
-            _ => {
-                println!("{} is not a valid unit!\n", unit);
-                continue;
-            },
+            Unit::Fahrenheit => fahrenheit_to_celsius(value),
+            Unit::Celsius => celsius_to_fahrenheit(value),
+            _ => continue,
         }
         if retry() {
             continue;
         }
         println!("Bye!");
         break;
+    }
+}
+
+fn parse_value_and_unit(input: &str) -> Result<(f64, Unit),()> {
+    let bytes = input.as_bytes();
+    let mut value: f64 = 0.0;
+    let mut unit: Unit = Unit::Undefined;
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b'F' || item == b'f' || item == b'C' || item == b'c' {
+            value = match input[..i].trim().parse() {
+                Ok(parsed_value) => parsed_value,
+                Err(_) => {
+                    println!("{} is not a valid value!\n", input[..i].trim());
+                    break;
+                },
+            };
+            if item == b'F' || item == b'f' {
+                unit = Unit::Fahrenheit;
+            } else {
+                unit = Unit::Celsius;
+            }
+        }
+    }
+    match unit {
+        Unit::Undefined => Err(()),
+        _ => Ok((value, unit)),
     }
 }
 
